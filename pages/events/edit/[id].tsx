@@ -1,15 +1,18 @@
+import { updateEvent } from '@/services/blockchain'
 import { generateEventData } from '@/utils/fakeData'
 import { timestampToDatetimeLocal } from '@/utils/helper'
 import { EventParams, EventStruct } from '@/utils/type.dt'
 import { GetServerSidePropsContext, NextPage } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { ChangeEvent, FormEvent, useState } from 'react'
 import { toast } from 'react-toastify'
 import { useAccount } from 'wagmi'
 
 const Page: NextPage<{ eventData: EventStruct }> = ({ eventData }) => {
   const { address } = useAccount()
+  const router = useRouter()
   const [event, setEvent] = useState<EventParams>({
     ...eventData,
     startsAt: timestampToDatetimeLocal(eventData.startsAt),
@@ -33,8 +36,16 @@ const Page: NextPage<{ eventData: EventStruct }> = ({ eventData }) => {
 
     await toast.promise(
       new Promise(async (resolve, reject) => {
-        console.log(event)
-        resolve(event)
+        updateEvent(event)
+          .then((tx) => {
+            console.log('tx', tx)
+            router.push(`/events/${event.id}`)
+            resolve(tx)
+          })
+          .catch((err) => {
+            console.log('err', err)
+            reject(err)
+          })
       }),
       {
         pending: 'Approve transaction...',

@@ -1,7 +1,9 @@
 import EventList from '@/components/EventList'
 import Hero from '@/components/Hero'
+import { getEvents } from '@/services/blockchain'
 import { generateEventData } from '@/utils/fakeData'
 import { EventStruct } from '@/utils/type.dt'
+import console from 'console'
 import { NextPage } from 'next'
 import Head from 'next/head'
 import { useEffect, useState } from 'react'
@@ -46,7 +48,7 @@ const Page: NextPage<{ eventsData: EventStruct[] }> = ({ eventsData }) => {
 export default Page
 
 export const getServerSideProps = async () => {
-  const eventsData: EventStruct[] = generateEventData(10)
+  const eventsData: EventStruct[] = await getEvents()
   return {
     props: { eventsData: JSON.parse(JSON.stringify(eventsData)) },
   }

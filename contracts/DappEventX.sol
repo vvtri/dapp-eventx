@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >0.8.14;
+pragma solidity 0.8.17;
 
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/utils/Counters.sol';
@@ -117,7 +117,7 @@ contract DappEventX is Ownable, ReentrancyGuard, ERC721 {
     eventX.ticketCost = ticketCost;
   }
 
-  function deleteEvent(uint256 eventId) public {
+  function deleteEvent(uint256 eventId) public nonReentrant {
     require(eventExists[eventId], 'eventExists[eventId]');
     require(
       events[eventId].owner == msg.sender || msg.sender == owner(),
@@ -125,7 +125,7 @@ contract DappEventX is Ownable, ReentrancyGuard, ERC721 {
     );
     require(!events[eventId].paidOut, '!events[eventId].paidOut');
     require(!events[eventId].refunded, '!events[eventId].refunded');
-    // refund
+    require(refundTickets(eventId), 'Event failed to refund');
     events[eventId].deleted = true;
   }
 
@@ -199,7 +199,53 @@ contract DappEventX is Ownable, ReentrancyGuard, ERC721 {
     return tickets[eventId];
   }
 
+  function refundTickets(uint256 eventId) internal returns (bool) {
+    for (uint256 i = 0; i < tickets[eventId].length; i++) {
+      tickets[eventId][i].refunded = true;
+      balance -= tickets[eventId][i].ticketCost;
+      payTo(tickets[eventId][i].owner, tickets[eventId][i].ticketCost);
+    }
+    events[eventId].refunded = true;
+    return true;
+  }
+
+  function payout(uint256 eventId) public nonReentrant {
+    require(eventExists[eventId], 'eventExists[eventId]');
+    require(
+      events[eventId].owner == msg.sender || msg.sender == owner(),
+      'events[eventId].owner == msg.sender || msg.sender == owner()'
+    );
+    require(!events[eventId].paidOut, '!events[eventId].paidOut');
+    // require(currentTime() > events[eventId].endsAt, 'currentTime() > events[eventId].endAt');
+
+    require(mintTickets(eventId), 'mintTickets(eventId)');
+
+    uint256 revenue = events[eventId].ticketCost * events[eventId].seats;
+    uint256 fee = (revenue * servicePct) / 100;
+
+    payTo(events[eventId].owner, revenue - fee);
+    payTo(owner(), fee);
+    events[eventId].paidOut = true;
+    balance -= revenue;
+  }
+
+  function mintTickets(uint256 eventId) internal returns (bool) {
+    for (uint256 i = 0; i < tickets[eventId].length; i++) {
+      _totalTokens.increment();
+      tickets[eventId][i].minted = true;
+      _safeMint(tickets[eventId][i].owner, _totalTokens.current());
+    }
+
+    events[eventId].minted = true;
+    return true;
+  }
+
   function currentTime() internal view returns (uint256) {
     return (block.timestamp * 1000) + 1000;
+  }
+
+  function payTo(address receiver, uint256 amount) internal {
+    (bool success, ) = receiver.call{ value: amount }('');
+    require(success);
   }
 }

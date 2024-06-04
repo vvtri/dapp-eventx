@@ -17,7 +17,10 @@
     "export": "next build && next export",
     "lint": "next lint",
     "format": "prettier --ignore-path .gitignore \"pages/**/*.+(ts|js|tsx)\" --write",
-    "postinstall": "husky install"
+    "postinstall": "husky install",
+    "blockchain": "yarn hardhat node",
+    "deploy": "yarn hardhat run ./scripts/deploy.js",
+    "seed": "yarn hardhat run ./scripts/seed.js"
   },
   "lint-staged": {
     "./src/**/*.{ts,js,jsx,tsx}": [
@@ -37,7 +40,7 @@
     "emojtcha-react": "1.0.6",
     "eslint": "8.48.0",
     "eslint-config-next": "13.4.19",
-    "ethers": "^6.7.1",
+    "ethers": "6.12.2",
     "lokijs": "^1.5.12",
     "moment": "^2.29.4",
     "next": "13.4.19",
@@ -73,6 +76,7 @@
     "hardhat": "^2.17.2",
     "hardhat-gas-reporter": "^1.0.9",
     "husky": "9.0.11",
+    "lint-staged": "15.2.5",
     "solidity-coverage": "^0.8.4",
     "typechain": "^8.3.1"
   }

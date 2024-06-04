@@ -3,6 +3,6 @@ import globalReducer from './global.slice'
 
 export const store = configureStore({
   reducer: {
-    global: globalReducer,
+    globalStates: globalReducer,
   },
 })

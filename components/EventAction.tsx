@@ -9,6 +9,7 @@ import { EventStruct } from '@/utils/type.dt'
 import { GrEdit } from 'react-icons/gr'
 import { FiDollarSign } from 'react-icons/fi'
 import { useRouter } from 'next/router'
+import { deleteEvent } from '@/services/blockchain'
 
 const EventActions: React.FC<{ event: EventStruct }> = ({ event }) => {
   const { address } = useAccount()
@@ -22,8 +23,16 @@ const EventActions: React.FC<{ event: EventStruct }> = ({ event }) => {
 
     await toast.promise(
       new Promise(async (resolve, reject) => {
-        console.log(event)
-        resolve(event)
+        deleteEvent(event.id.toString())
+          .then((tx) => {
+            console.log('tx', tx)
+            router.push('/')
+            resolve(tx)
+          })
+          .catch((err) => {
+            console.log('err', err)
+            reject(err)
+          })
       }),
       {
         pending: 'Approve transaction...',

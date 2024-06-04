@@ -14,6 +14,7 @@ import { generateEventData, generateTicketData } from '@/utils/fakeData'
 import { useDispatch, useSelector } from 'react-redux'
 import { setEvent, setTickets } from '@/store/global.slice'
 import { useEffect } from 'react'
+import { getEvent, getTickets } from '@/services/blockchain'
 
 interface ComponentProps {
   eventData: EventStruct
@@ -23,7 +24,9 @@ interface ComponentProps {
 const Page: NextPage<ComponentProps> = ({ eventData, ticketsData }) => {
   const { address } = useAccount()
   const dispatch = useDispatch()
-  const { event, tickets, ticketModal } = useSelector((states: RootState) => states.globalStates)
+  const { event, tickets, ticketModal } = useSelector((states: RootState) => {
+    return states.globalStates
+  })
 
   useEffect(() => {
     dispatch(setEvent(eventData))
@@ -163,8 +166,8 @@ export default Page
 
 export const getServerSideProps = async (context: GetServerSidePropsContext) => {
   const { id } = context.query
-  const eventData: EventStruct = generateEventData(Number(id))[0]
-  const ticketsData: TicketStruct[] = generateTicketData(5)
+  const eventData: EventStruct = await getEvent(id as string)
+  const ticketsData: TicketStruct[] = await getTickets(id as string)
 
   return {
     props: {
